@@ -1,4 +1,5 @@
 @echo off
+chcp 936 >nul
 set PYTHONUTF8=1
 
 REM ---- BSAI DynamicVRAM / Smart Memory ¿ª¹Ø ----
@@ -97,17 +98,20 @@ echo [BSAI]  - Requires >= 16GB system RAM (shared GPU memory)
 echo [BSAI]  - VAE decode offloaded to XPU worker on :8190
 echo [BSAI] ============================================
 
-for /f "skip=1 tokens=*" %%M in ('wmic ComputerSystem get TotalPhysicalMemory') do (
-    if not "%%M"=="" (
-        set /a TOTAL_MB=%%M/1024/1024
-        goto :ramdone
-    )
-)
-:ramdone
-if !TOTAL_MB! LSS 16000 (
-    echo [BSAI] WARNING: only !TOTAL_MB! MB RAM detected, H3 models need >=16GB for iGPU.
+REM ---- System RAM detection ----
+REM WMIC was removed from Windows 11 24H2+, and cmd's set /a is 32-bit, so the
+REM old "wmic ... /1024/1024" could never produce a usable MB value.
+REM Query CIM through PowerShell instead and let it do the bytes-to-MB math.
+set "TOTAL_MB="
+for /f "usebackq delims=" %%M in (`powershell -NoProfile -Command "[math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1MB)" 2^>nul`) do set "TOTAL_MB=%%M"
+if not defined TOTAL_MB (
+    echo [BSAI] RAM: unknown - WMI unavailable, skipping the 16GB iGPU check
 ) else (
-    echo [BSAI] RAM: !TOTAL_MB! MB OK
+    if !TOTAL_MB! LSS 16000 (
+        echo [BSAI] WARNING: only !TOTAL_MB! MB RAM detected, H3 models need >=16GB for iGPU.
+    ) else (
+        echo [BSAI] RAM: !TOTAL_MB! MB OK
+    )
 )
 
 set OMNIXPU_ENABLE=1

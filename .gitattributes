@@ -1,0 +1,7 @@
+# BSAI 整合包仓库 — 行尾规范
+#
+# 启动器必须是 CRLF。cmd.exe 解析 LF-only 的 .bat/.cmd 时会从中间截断命令，
+# 导致 set 语句被静默丢弃（曾导致 BSAI_DYNAMIC_VRAM 变空、XPU 分支参数错乱）。
+# text eol=crlf = 仓库内按 LF 存储，检出到工作区一律还原成 CRLF。
+*.bat text eol=crlf
+*.cmd text eol=crlf

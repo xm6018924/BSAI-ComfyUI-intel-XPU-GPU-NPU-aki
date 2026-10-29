@@ -2,6 +2,7 @@
 # 排除整合包其他一切（模型、Python 环境、ComfyUI 本体、插件源码、工作流等）
 *
 !.gitignore
+!.gitattributes
 !README.md
 !BSAI-ComfyUI-intel-XPU-GPU-NPU-aki_多硬件协同模式.bat
 !BSAI_Omni加速组件健康检查.cmd
